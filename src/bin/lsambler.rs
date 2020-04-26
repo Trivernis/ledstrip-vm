@@ -28,13 +28,25 @@ struct Opts {
 
 fn main() -> io::Result<()> {
     let opts: Opts = Opts::from_args();
-    let contents = read_to_string(opts.input_file)?;
+    let input_file_name = opts.input_file;
+    let contents = read_to_string(&input_file_name)?;
     let f = File::create(opts.output_file)?;
     let mut writer = BufWriter::new(f);
+    let mut line_number = 0;
     contents
         .lines()
-        .map(|line| get_token(line))
-        .filter_map(|token| Some(token?.to_bytecode()))
+        .filter_map(|line| {
+            line_number += 1;
+            if let Some(token) = get_token(line) {
+                Some(token.to_bytecode())
+            } else {
+                println!(
+                    "Failed to parse instruction '{}' \n-> {}:{}",
+                    line, &input_file_name, line_number
+                );
+                None
+            }
+        })
         .for_each(|code| {
             writer.write(&code).expect("Failed to write output.");
         });
@@ -43,8 +55,8 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+/// Parses the line into a token
 fn get_token(line: &str) -> Option<Box<dyn Token>> {
-    println!("{}", line);
     let mut instr_parts = line.split_whitespace();
 
     match instr_parts.next()? {
@@ -85,6 +97,8 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
     }
 }
 
+/// Parses a value depending on if it starts with 0x (as a hex value)
+/// or just is a plain base-10 number
 fn parse_value(value: &str) -> Result<u8, ParseIntError> {
     if value.starts_with("0x") {
         let value = value.trim_start_matches("0x");
