@@ -5,10 +5,10 @@ use ledstrip_vm::asm_tokens::{
     SubToken, Token, WriteToken,
 };
 use ledstrip_vm::registers::get_register_by_name;
-use rayon::prelude::*;
 use std::fs::{read_to_string, File};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
+use std::num::ParseIntError;
 use structopt::StructOpt;
 
 macro_rules! some_box {
@@ -36,13 +36,15 @@ fn main() -> io::Result<()> {
         .map(|line| get_token(line))
         .filter_map(|token| Some(token?.to_bytecode()))
         .for_each(|code| {
-            writer.write(&code);
+            writer.write(&code).expect("Failed to write output.");
         });
 
+    writer.flush()?;
     Ok(())
 }
 
 fn get_token(line: &str) -> Option<Box<dyn Token>> {
+    println!("{}", line);
     let mut instr_parts = line.split_whitespace();
 
     match instr_parts.next()? {
@@ -50,10 +52,10 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
             register: get_register_by_name(instr_parts.next()?)?,
         })),
         "set" => some_box!(SetToken {
-            value: instr_parts
-                .next()?
-                .parse::<u8>()
-                .expect("Failed to parse the value into a u8."),
+            value: parse_value(instr_parts.next()?).expect(&format!(
+                "Failed to parse the hex value into a u8: {}.",
+                line
+            )),
             register: get_register_by_name(instr_parts.next()?)?,
         }),
         "copy" => some_box!(CopyToken {
@@ -80,5 +82,14 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
         "pause" => some_box!(PauseToken),
         "cmd" => some_box!(CmdToken),
         _ => None,
+    }
+}
+
+fn parse_value(value: &str) -> Result<u8, ParseIntError> {
+    if value.starts_with("0x") {
+        let value = value.trim_start_matches("0x");
+        Ok(i64::from_str_radix(value, 16)? as u8)
+    } else {
+        value.parse::<u8>()
     }
 }
