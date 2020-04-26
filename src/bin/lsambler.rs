@@ -1,4 +1,3 @@
-use ledstrip_vm::asm_tokens;
 use ledstrip_vm::asm_tokens::{
     AddToken, ClearToken, CmdToken, CopyToken, DivToken, ExitToken, GotoToken, JeToken, JgToken,
     JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, RshToken, SetToken,
@@ -7,7 +6,7 @@ use ledstrip_vm::asm_tokens::{
 use ledstrip_vm::registers::get_register_by_name;
 use std::fs::{read_to_string, File};
 use std::io;
-use std::io::{BufRead, BufReader, BufWriter, Read, Write};
+use std::io::{BufWriter, Write};
 use std::num::ParseIntError;
 use structopt::StructOpt;
 
@@ -60,9 +59,9 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
     let mut instr_parts = line.split_whitespace();
 
     match instr_parts.next()? {
-        "exit" => Some(Box::new(ExitToken {
+        "exit" => some_box!(ExitToken {
             register: get_register_by_name(instr_parts.next()?)?,
-        })),
+        }),
         "set" => some_box!(SetToken {
             value: parse_value(instr_parts.next()?).expect(&format!(
                 "Failed to parse the hex value into a u8: {}.",

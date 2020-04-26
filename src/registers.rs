@@ -22,7 +22,7 @@ pub fn get_register_by_name(name: &str) -> Option<u8> {
         ("rgl", RGL),
     ]
     .iter()
-    .find(|(reg, bc)| *reg == name);
+    .find(|(reg, _)| *reg == name);
 
     if let Some(item) = item {
         Some((*item).1)
