@@ -103,7 +103,7 @@ impl Token for SetToken {
         } else if let Some(mut rg) = runtime.get_4byte_register(self.register) {
             rg.set(self.value as u32);
         } else if self.register == RCS {
-            runtime.rcs.set(self.value == 0);
+            runtime.rcs.set(self.value != 0);
         }
 
         Ok(())
@@ -147,7 +147,7 @@ impl Token for CopyToken {
         } else if let Some(mut rg) = runtime.get_4byte_register(self.register_2) {
             rg.set(value);
         } else if self.register_2 == RCS {
-            runtime.rcs.set(value == 0);
+            runtime.rcs.set(value != 0);
         } else {
             panic!("unknown register {}", self.register_2);
         }
