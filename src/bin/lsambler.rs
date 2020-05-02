@@ -1,9 +1,9 @@
-use ledstrip_vm::asm_tokens::{
+use ledstrip_vm::registers::get_register_by_name;
+use ledstrip_vm::tokens::{
     AddToken, ClearToken, CmdToken, CopyToken, DivToken, ExitToken, GotoToken, JeToken, JgToken,
     JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, RshToken, SetToken,
     SubToken, Token, WriteToken,
 };
-use ledstrip_vm::registers::get_register_by_name;
 use std::fs::{read_to_string, File};
 use std::io;
 use std::io::{BufWriter, Write};

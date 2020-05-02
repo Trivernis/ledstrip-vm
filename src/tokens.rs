@@ -24,11 +24,21 @@ pub trait Token {
     fn to_bytecode(&self) -> Vec<u8>;
 }
 
+pub trait FromBytecode {
+    fn from_bytecode(code: &[u8]) -> Self;
+}
+
 pub struct NopToken;
 
 impl Token for NopToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_NOP]
+    }
+}
+
+impl FromBytecode for NopToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -39,6 +49,12 @@ pub struct ExitToken {
 impl Token for ExitToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_EXIT, self.register]
+    }
+}
+
+impl FromBytecode for ExitToken {
+    fn from_bytecode(code: &[u8]) -> Self {
+        Self { register: code[1] }
     }
 }
 
@@ -53,6 +69,15 @@ impl Token for SetToken {
     }
 }
 
+impl FromBytecode for SetToken {
+    fn from_bytecode(code: &[u8]) -> Self {
+        Self {
+            value: code[1],
+            register: code[2],
+        }
+    }
+}
+
 pub struct CopyToken {
     pub register_1: u8,
     pub register_2: u8,
@@ -64,11 +89,26 @@ impl Token for CopyToken {
     }
 }
 
+impl FromBytecode for CopyToken {
+    fn from_bytecode(code: &[u8]) -> Self {
+        Self {
+            register_1: code[1],
+            register_2: code[2],
+        }
+    }
+}
+
 pub struct LoadToken;
 
 impl Token for LoadToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_LOAD]
+    }
+}
+
+impl FromBytecode for LoadToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -82,11 +122,23 @@ impl Token for ClearToken {
     }
 }
 
+impl FromBytecode for ClearToken {
+    fn from_bytecode(code: &[u8]) -> Self {
+        Self { register: code[1] }
+    }
+}
+
 pub struct WriteToken;
 
 impl Token for WriteToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_WRITE]
+    }
+}
+
+impl FromBytecode for WriteToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -98,11 +150,23 @@ impl Token for LabelToken {
     }
 }
 
+impl FromBytecode for LabelToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct GotoToken;
 
 impl Token for GotoToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_GOTO]
+    }
+}
+
+impl FromBytecode for GotoToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -114,11 +178,23 @@ impl Token for AddToken {
     }
 }
 
+impl FromBytecode for AddToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct SubToken;
 
 impl Token for SubToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_SUB]
+    }
+}
+
+impl FromBytecode for SubToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -130,11 +206,23 @@ impl Token for MulToken {
     }
 }
 
+impl FromBytecode for MulToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct DivToken;
 
 impl Token for DivToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_DIV]
+    }
+}
+
+impl FromBytecode for DivToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -146,11 +234,23 @@ impl Token for ModToken {
     }
 }
 
+impl FromBytecode for ModToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct LshToken;
 
 impl Token for LshToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_LSH]
+    }
+}
+
+impl FromBytecode for LshToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -162,11 +262,23 @@ impl Token for RshToken {
     }
 }
 
+impl FromBytecode for RshToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct JgToken;
 
 impl Token for JgToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_JG]
+    }
+}
+
+impl FromBytecode for JgToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -178,11 +290,23 @@ impl Token for JlToken {
     }
 }
 
+impl FromBytecode for JlToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct JeToken;
 
 impl Token for JeToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_JE]
+    }
+}
+
+impl FromBytecode for JeToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
 
@@ -194,10 +318,22 @@ impl Token for PauseToken {
     }
 }
 
+impl FromBytecode for PauseToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
+    }
+}
+
 pub struct CmdToken;
 
 impl Token for CmdToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_CMD]
+    }
+}
+
+impl FromBytecode for CmdToken {
+    fn from_bytecode(_: &[u8]) -> Self {
+        Self
     }
 }
