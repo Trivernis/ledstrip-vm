@@ -120,7 +120,7 @@ impl Runtime {
                     .borrow_mut()
                     .set_state(StateStripCommand::Off)
                     .unwrap();
-                return Ok(0);
+                return Ok(code);
             }
 
             self.current_index += 1;
