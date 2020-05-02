@@ -13,6 +13,7 @@ pub const T_CLEAR: u8 = 0x05;
 pub const T_WRITE: u8 = 0x06;
 pub const T_LABEL: u8 = 0x07;
 pub const T_GOTO: u8 = 0x08;
+pub const T_DEBUG: u8 = 0x09;
 pub const T_ADD: u8 = 0x10;
 pub const T_SUB: u8 = 0x11;
 pub const T_MUL: u8 = 0x12;
@@ -137,13 +138,18 @@ impl Token for CopyToken {
             value = rg.get();
         } else if self.register_1 == RCS {
             value = runtime.rcs.get() as u32;
+        } else {
+            panic!("unknown register {}", self.register_1);
         }
+
         if let Some(mut rg) = runtime.get_1byte_register(self.register_2) {
             rg.set(value as u8);
         } else if let Some(mut rg) = runtime.get_4byte_register(self.register_2) {
             rg.set(value);
         } else if self.register_2 == RCS {
             runtime.rcs.set(value == 0);
+        } else {
+            panic!("unknown register {}", self.register_2);
         }
 
         Ok(())
@@ -269,6 +275,33 @@ impl Token for GotoToken {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct DebugToken;
+
+impl Token for DebugToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_DEBUG]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        println!("--- Registers --");
+        println!("rcs: {}", runtime.rcs.get());
+        println!("rcr: {}", runtime.rcr.get());
+        println!("rcg: {}", runtime.rcg.get());
+        println!("rcb: {}", runtime.rcb.get());
+        println!("rgd: {}", runtime.rgd.get());
+        println!("rgp: {}", runtime.rgp.get());
+        println!("rgi: {}", runtime.rgi.get());
+        println!("rgo: {}", runtime.rgo.get());
+        println!("rgl: {}", runtime.rgl.get());
+        println!("\n--- Runtime ---");
+        println!("Memory: {:?}", runtime.memory);
+        println!();
+
+        Ok(())
+    }
+}
+
 impl FromBytecode for GotoToken {
     fn from_bytecode(_: &[&u8]) -> Self {
         Self
@@ -284,7 +317,7 @@ impl Token for AddToken {
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        runtime.rgo.set(runtime.rgo.get() + runtime.rgi.get());
+        runtime.rgo.set(runtime.rgd.get() + runtime.rgi.get());
 
         Ok(())
     }

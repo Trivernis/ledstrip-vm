@@ -3,11 +3,11 @@ use crate::registers::{
     Rcb, Rcg, Rcr, Rcs, Register, Rgd, Rgi, Rgl, Rgo, Rgp, RCB, RCG, RCR, RGD, RGI, RGL, RGO, RGP,
 };
 use crate::tokens::{
-    AddToken, ClearToken, CmdToken, CopyToken, DivToken, ExitToken, FromBytecode, GotoToken,
-    JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken,
-    RshToken, SendToken, SetToken, SubToken, Token, WriteToken, T_ADD, T_CLEAR, T_CMD, T_COPY,
-    T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL, T_PAUSE, T_RSH,
-    T_SEND, T_SET, T_SUB, T_WRITE,
+    AddToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken, FromBytecode,
+    GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken,
+    PauseToken, RshToken, SendToken, SetToken, SubToken, Token, WriteToken, T_ADD, T_CLEAR, T_CMD,
+    T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL,
+    T_PAUSE, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -62,56 +62,46 @@ impl Runtime {
     /// that can be executed
     pub fn parse_bytecode(&mut self, bytecode: Vec<u8>) {
         let mut code_iter = bytecode.iter();
+        let mut text = self.text.borrow_mut();
 
         while let Some(instruction) = code_iter.next() {
             match *instruction {
-                T_EXIT => self
-                    .text
-                    .borrow_mut()
-                    .push(Box::new(ExitToken::from_bytecode(&[
-                        instruction,
-                        code_iter.next().unwrap(),
-                    ]))),
-                T_SET => self
-                    .text
-                    .borrow_mut()
-                    .push(Box::new(SetToken::from_bytecode(&[
-                        instruction,
-                        code_iter.next().unwrap(),
-                        code_iter.next().unwrap(),
-                    ]))),
-                T_COPY => self
-                    .text
-                    .borrow_mut()
-                    .push(Box::new(CopyToken::from_bytecode(&[
-                        instruction,
-                        code_iter.next().unwrap(),
-                        code_iter.next().unwrap(),
-                    ]))),
-                T_LOAD => self.text.borrow_mut().push(Box::new(LoadToken)),
-                T_CLEAR => self
-                    .text
-                    .borrow_mut()
-                    .push(Box::new(ClearToken::from_bytecode(&[
-                        instruction,
-                        code_iter.next().unwrap(),
-                    ]))),
-                T_WRITE => self.text.borrow_mut().push(Box::new(WriteToken)),
-                T_LABEL => self.text.borrow_mut().push(Box::new(LabelToken)),
-                T_GOTO => self.text.borrow_mut().push(Box::new(GotoToken)),
-                T_ADD => self.text.borrow_mut().push(Box::new(AddToken)),
-                T_SUB => self.text.borrow_mut().push(Box::new(SubToken)),
-                T_MUL => self.text.borrow_mut().push(Box::new(MulToken)),
-                T_DIV => self.text.borrow_mut().push(Box::new(DivToken)),
-                T_MOD => self.text.borrow_mut().push(Box::new(ModToken)),
-                T_LSH => self.text.borrow_mut().push(Box::new(LshToken)),
-                T_RSH => self.text.borrow_mut().push(Box::new(RshToken)),
-                T_JG => self.text.borrow_mut().push(Box::new(JgToken)),
-                T_JL => self.text.borrow_mut().push(Box::new(JlToken)),
-                T_JE => self.text.borrow_mut().push(Box::new(JeToken)),
-                T_PAUSE => self.text.borrow_mut().push(Box::new(PauseToken)),
-                T_CMD => self.text.borrow_mut().push(Box::new(CmdToken)),
-                T_SEND => self.text.borrow_mut().push(Box::new(SendToken)),
+                T_EXIT => text.push(Box::new(ExitToken::from_bytecode(&[
+                    instruction,
+                    code_iter.next().unwrap(),
+                ]))),
+                T_SET => text.push(Box::new(SetToken::from_bytecode(&[
+                    instruction,
+                    code_iter.next().unwrap(),
+                    code_iter.next().unwrap(),
+                ]))),
+                T_COPY => text.push(Box::new(CopyToken::from_bytecode(&[
+                    instruction,
+                    code_iter.next().unwrap(),
+                    code_iter.next().unwrap(),
+                ]))),
+                T_LOAD => text.push(Box::new(LoadToken)),
+                T_CLEAR => text.push(Box::new(ClearToken::from_bytecode(&[
+                    instruction,
+                    code_iter.next().unwrap(),
+                ]))),
+                T_WRITE => text.push(Box::new(WriteToken)),
+                T_LABEL => text.push(Box::new(LabelToken)),
+                T_GOTO => text.push(Box::new(GotoToken)),
+                T_DEBUG => text.push(Box::new(DebugToken)),
+                T_ADD => text.push(Box::new(AddToken)),
+                T_SUB => text.push(Box::new(SubToken)),
+                T_MUL => text.push(Box::new(MulToken)),
+                T_DIV => text.push(Box::new(DivToken)),
+                T_MOD => text.push(Box::new(ModToken)),
+                T_LSH => text.push(Box::new(LshToken)),
+                T_RSH => text.push(Box::new(RshToken)),
+                T_JG => text.push(Box::new(JgToken)),
+                T_JL => text.push(Box::new(JlToken)),
+                T_JE => text.push(Box::new(JeToken)),
+                T_PAUSE => text.push(Box::new(PauseToken)),
+                T_CMD => text.push(Box::new(CmdToken)),
+                T_SEND => text.push(Box::new(SendToken)),
                 _ => panic!("unknown instruction {}", instruction),
             };
         }

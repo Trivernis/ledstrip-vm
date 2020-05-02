@@ -1,8 +1,8 @@
 use ledstrip_vm::registers::get_register_code_by_name;
 use ledstrip_vm::tokens::{
-    AddToken, ClearToken, CmdToken, CopyToken, DivToken, ExitToken, GotoToken, JeToken, JgToken,
-    JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, RshToken, SendToken,
-    SetToken, SubToken, Token, WriteToken,
+    AddToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken, GotoToken, JeToken,
+    JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, RshToken,
+    SendToken, SetToken, SubToken, Token, WriteToken,
 };
 use std::fs::{read_to_string, File};
 use std::io;
@@ -38,11 +38,13 @@ fn main() -> io::Result<()> {
             line_number += 1;
             if let Some(token) = get_token(line) {
                 Some(token.to_bytecode())
-            } else {
+            } else if line.replace("\\s", "").len() > 0 && !line.starts_with("#") {
                 println!(
                     "Failed to parse instruction '{}' \n-> {}:{}",
                     line, &input_file_name, line_number
                 );
+                None
+            } else {
                 None
             }
         })
@@ -80,6 +82,7 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
         "write" => some_box!(WriteToken),
         "label" => some_box!(LabelToken),
         "goto" => some_box!(GotoToken),
+        "debug" => some_box!(DebugToken),
         "add" => some_box!(AddToken),
         "sub" => some_box!(SubToken),
         "mul" => some_box!(MulToken),

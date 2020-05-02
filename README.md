@@ -16,6 +16,7 @@ A virtual machine for controlling a wifi led strip.
 | write (rgd, rgp)    | writes the value in the data register to the address of the pointer register | 0x06 |
 | label (rgl)         | creates a label with rgd as the name                                         | 0x07 |
 | goto (rgl)          | goes to the label with name rgd                                              | 0x08 |
+| debug (*)           | prints out the state for debug information                                   | 0x09 |
 | add (rgd, rgi, rgo) | adds the value of rgi to the value of rgd and writes the result into rgo     | 0x10 |
 | sub (rgd, rgi, rgo) | substracts rgi from rgd and writes the result into rgo                       | 0x11 |
 | mul (rgd, rgi, rgo) | multiplies rgd by rgi and writes the result to rgo                           | 0x12 |
@@ -27,8 +28,8 @@ A virtual machine for controlling a wifi led strip.
 | jl (rgd, rgi, rgl)  | jumps to rgl if rgd < rgi                                                    | 0x21 |
 | je (rgd, rgi, rgl)  | jumps to rgl if rgd == rgi                                                   | 0x22 |
 | pause (rgd)         | pauses for rgd milliseconds                                                  | 0xF0 |
-| cmd (rgd)       | executes the command in rgd                                                  | 0xF1 |
-| send (rcr, rcg, rcb) | sends the values stored in the color registers to the strip | 0xF2
+| cmd (rgd)           | executes the command in rgd                                                  | 0xF1 |
+| send (rcr, rcg, rcb)| sends the values stored in the color registers to the strip                  | 0xF2 |
 
 ### Registers
 
@@ -51,3 +52,4 @@ A virtual machine for controlling a wifi led strip.
 - the rgi register stores the input for operations that require two input values
 - the rgo register stores the result of operations
 - the rgl register stores as label name that can be jumped to
+- comments start with #
