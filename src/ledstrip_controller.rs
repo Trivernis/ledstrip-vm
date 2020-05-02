@@ -27,6 +27,7 @@ pub enum ProgramStripCommand {
     SevenJumping = 0x38,
 }
 
+#[derive(Debug)]
 pub struct LedStripController {
     stream: TcpStream,
     pub r: u8,
@@ -78,7 +79,11 @@ impl LedStripController {
 fn create_message(data: &[u8]) -> Vec<u8> {
     let mut data = data.clone().to_vec();
     data.append(&mut vec![0x0f]);
-    data.push(data.iter().sum::<u8>() & 255);
+    let mut sum = 0u128;
+    for i in &data {
+        sum += *i as u128;
+    }
+    data.push(sum as u8 & 255);
 
     data
 }

@@ -28,6 +28,7 @@ A virtual machine for controlling a wifi led strip.
 | je (rgd, rgi, rgl)  | jumps to rgl if rgd == rgi                                                   | 0x22 |
 | pause (rgd)         | pauses for rgd milliseconds                                                  | 0xF0 |
 | cmd (rgd)       | executes the command in rgd                                                  | 0xF1 |
+| send (rcr, rcg, rcb) | sends the values stored in the color registers to the strip | 0xF2
 
 ### Registers
 
@@ -44,7 +45,7 @@ A virtual machine for controlling a wifi led strip.
 | rgl      | label          | 4 bytes | 0x09   |
 
 - changing the state register results in turning the strip on/off
-- changing the r/g/b registers results in changing the color
+- the rcr, rcg and rcb registers store the rgb value of the strip
 - the rgd register is the default register for storing data
 - the rgp register stores a pointer to "memory" space
 - the rgi register stores the input for operations that require two input values

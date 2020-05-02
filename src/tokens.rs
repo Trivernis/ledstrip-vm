@@ -1,32 +1,31 @@
 use crate::registers::{Register, RCS};
 use crate::runtime::Runtime;
-use std::borrow::BorrowMut;
 use std::io;
-use std::panic::resume_unwind;
 use std::thread::sleep;
 use std::time::Duration;
 
-const T_NOP: u8 = 0x00;
-const T_EXIT: u8 = 0x01;
-const T_SET: u8 = 0x02;
-const T_COPY: u8 = 0x03;
-const T_LOAD: u8 = 0x04;
-const T_CLEAR: u8 = 0x05;
-const T_WRITE: u8 = 0x06;
-const T_LABEL: u8 = 0x07;
-const T_GOTO: u8 = 0x08;
-const T_ADD: u8 = 0x10;
-const T_SUB: u8 = 0x11;
-const T_MUL: u8 = 0x12;
-const T_DIV: u8 = 0x13;
-const T_MOD: u8 = 0x14;
-const T_LSH: u8 = 0x15;
-const T_RSH: u8 = 0x16;
-const T_JG: u8 = 0x20;
-const T_JL: u8 = 0x21;
-const T_JE: u8 = 0x22;
-const T_PAUSE: u8 = 0xF0;
-const T_CMD: u8 = 0xF1;
+pub const T_NOP: u8 = 0x00;
+pub const T_EXIT: u8 = 0x01;
+pub const T_SET: u8 = 0x02;
+pub const T_COPY: u8 = 0x03;
+pub const T_LOAD: u8 = 0x04;
+pub const T_CLEAR: u8 = 0x05;
+pub const T_WRITE: u8 = 0x06;
+pub const T_LABEL: u8 = 0x07;
+pub const T_GOTO: u8 = 0x08;
+pub const T_ADD: u8 = 0x10;
+pub const T_SUB: u8 = 0x11;
+pub const T_MUL: u8 = 0x12;
+pub const T_DIV: u8 = 0x13;
+pub const T_MOD: u8 = 0x14;
+pub const T_LSH: u8 = 0x15;
+pub const T_RSH: u8 = 0x16;
+pub const T_JG: u8 = 0x20;
+pub const T_JL: u8 = 0x21;
+pub const T_JE: u8 = 0x22;
+pub const T_PAUSE: u8 = 0xF0;
+pub const T_CMD: u8 = 0xF1;
+pub const T_SEND: u8 = 0xF2;
 
 pub trait Token {
     fn to_bytecode(&self) -> Vec<u8>;
@@ -34,9 +33,10 @@ pub trait Token {
 }
 
 pub trait FromBytecode {
-    fn from_bytecode(code: &[u8]) -> Self;
+    fn from_bytecode(code: &[&u8]) -> Self;
 }
 
+#[derive(Debug, Clone)]
 pub struct NopToken;
 
 impl Token for NopToken {
@@ -49,11 +49,12 @@ impl Token for NopToken {
 }
 
 impl FromBytecode for NopToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ExitToken {
     pub register: u8,
 }
@@ -79,11 +80,12 @@ impl Token for ExitToken {
 }
 
 impl FromBytecode for ExitToken {
-    fn from_bytecode(code: &[u8]) -> Self {
-        Self { register: code[1] }
+    fn from_bytecode(code: &[&u8]) -> Self {
+        Self { register: *code[1] }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SetToken {
     pub value: u8,
     pub register: u8,
@@ -108,14 +110,15 @@ impl Token for SetToken {
 }
 
 impl FromBytecode for SetToken {
-    fn from_bytecode(code: &[u8]) -> Self {
+    fn from_bytecode(code: &[&u8]) -> Self {
         Self {
-            value: code[1],
-            register: code[2],
+            value: *code[1],
+            register: *code[2],
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CopyToken {
     pub register_1: u8,
     pub register_2: u8,
@@ -148,14 +151,15 @@ impl Token for CopyToken {
 }
 
 impl FromBytecode for CopyToken {
-    fn from_bytecode(code: &[u8]) -> Self {
+    fn from_bytecode(code: &[&u8]) -> Self {
         Self {
-            register_1: code[1],
-            register_2: code[2],
+            register_1: *code[1],
+            register_2: *code[2],
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct LoadToken;
 
 impl Token for LoadToken {
@@ -176,11 +180,12 @@ impl Token for LoadToken {
 }
 
 impl FromBytecode for LoadToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ClearToken {
     pub register: u8,
 }
@@ -204,11 +209,12 @@ impl Token for ClearToken {
 }
 
 impl FromBytecode for ClearToken {
-    fn from_bytecode(code: &[u8]) -> Self {
-        Self { register: code[1] }
+    fn from_bytecode(code: &[&u8]) -> Self {
+        Self { register: *code[1] }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct WriteToken;
 
 impl Token for WriteToken {
@@ -224,11 +230,12 @@ impl Token for WriteToken {
 }
 
 impl FromBytecode for WriteToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct LabelToken;
 
 impl Token for LabelToken {
@@ -244,11 +251,12 @@ impl Token for LabelToken {
 }
 
 impl FromBytecode for LabelToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct GotoToken;
 
 impl Token for GotoToken {
@@ -262,11 +270,12 @@ impl Token for GotoToken {
 }
 
 impl FromBytecode for GotoToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct AddToken;
 
 impl Token for AddToken {
@@ -282,11 +291,12 @@ impl Token for AddToken {
 }
 
 impl FromBytecode for AddToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SubToken;
 
 impl Token for SubToken {
@@ -302,11 +312,12 @@ impl Token for SubToken {
 }
 
 impl FromBytecode for SubToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct MulToken;
 
 impl Token for MulToken {
@@ -322,11 +333,12 @@ impl Token for MulToken {
 }
 
 impl FromBytecode for MulToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct DivToken;
 
 impl Token for DivToken {
@@ -342,11 +354,12 @@ impl Token for DivToken {
 }
 
 impl FromBytecode for DivToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ModToken;
 
 impl Token for ModToken {
@@ -362,11 +375,12 @@ impl Token for ModToken {
 }
 
 impl FromBytecode for ModToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct LshToken;
 
 impl Token for LshToken {
@@ -382,11 +396,12 @@ impl Token for LshToken {
 }
 
 impl FromBytecode for LshToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct RshToken;
 
 impl Token for RshToken {
@@ -402,11 +417,12 @@ impl Token for RshToken {
 }
 
 impl FromBytecode for RshToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct JgToken;
 
 impl Token for JgToken {
@@ -424,11 +440,12 @@ impl Token for JgToken {
 }
 
 impl FromBytecode for JgToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct JlToken;
 
 impl Token for JlToken {
@@ -446,11 +463,12 @@ impl Token for JlToken {
 }
 
 impl FromBytecode for JlToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct JeToken;
 
 impl Token for JeToken {
@@ -468,11 +486,12 @@ impl Token for JeToken {
 }
 
 impl FromBytecode for JeToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct PauseToken;
 
 impl Token for PauseToken {
@@ -488,11 +507,12 @@ impl Token for PauseToken {
 }
 
 impl FromBytecode for PauseToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CmdToken;
 
 impl Token for CmdToken {
@@ -508,7 +528,26 @@ impl Token for CmdToken {
 }
 
 impl FromBytecode for CmdToken {
-    fn from_bytecode(_: &[u8]) -> Self {
+    fn from_bytecode(_: &[&u8]) -> Self {
         Self
+    }
+}
+
+pub struct SendToken;
+
+impl Token for SendToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_SEND]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        let r = runtime.rcr.get();
+        let g = runtime.rcg.get();
+        let b = runtime.rcb.get();
+
+        runtime
+            .strip_controller
+            .borrow_mut()
+            .send_rgb_color(r, g, b)
     }
 }

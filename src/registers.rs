@@ -41,42 +41,48 @@ pub trait Register<T> {
     fn get(&self) -> T;
 }
 
+#[derive(Debug, Clone)]
 pub struct Rcs {
     value: bool,
     strip_controller: Rc<RefCell<LedStripController>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rcr {
     value: u8,
-    strip_controller: Rc<RefCell<LedStripController>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rcg {
     value: u8,
-    strip_controller: Rc<RefCell<LedStripController>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rcb {
     value: u8,
-    strip_controller: Rc<RefCell<LedStripController>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rgd {
     value: u32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rgp {
     value: u32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rgi {
     value: u32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rgo {
     value: u32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Rgl {
     value: u32,
 }
@@ -91,29 +97,20 @@ impl Rcs {
 }
 
 impl Rcr {
-    pub fn new(strip_controller: Rc<RefCell<LedStripController>>) -> Self {
-        Self {
-            value: 0,
-            strip_controller,
-        }
+    pub fn new() -> Self {
+        Self { value: 0 }
     }
 }
 
 impl Rcg {
-    pub fn new(strip_controller: Rc<RefCell<LedStripController>>) -> Self {
-        Self {
-            value: 0,
-            strip_controller,
-        }
+    pub fn new() -> Self {
+        Self { value: 0 }
     }
 }
 
 impl Rcb {
-    pub fn new(strip_controller: Rc<RefCell<LedStripController>>) -> Self {
-        Self {
-            value: 0,
-            strip_controller,
-        }
+    pub fn new() -> Self {
+        Self { value: 0 }
     }
 }
 
@@ -169,12 +166,6 @@ impl Register<bool> for Rcs {
 impl Register<u8> for Rcr {
     fn set(&mut self, value: u8) {
         self.value = value;
-        let mut controller = self.strip_controller.borrow_mut();
-        let g = controller.g;
-        let b = controller.b;
-        controller
-            .send_rgb_color(self.value, g, b)
-            .expect("failed send rgb color");
     }
 
     fn get(&self) -> u8 {
@@ -185,12 +176,6 @@ impl Register<u8> for Rcr {
 impl Register<u8> for Rcg {
     fn set(&mut self, value: u8) {
         self.value = value;
-        let mut controller = self.strip_controller.borrow_mut();
-        let r = controller.r;
-        let b = controller.b;
-        controller
-            .send_rgb_color(r, self.value, b)
-            .expect("failed to send rgb color");
     }
 
     fn get(&self) -> u8 {
@@ -201,12 +186,6 @@ impl Register<u8> for Rcg {
 impl Register<u8> for Rcb {
     fn set(&mut self, value: u8) {
         self.value = value;
-        let mut controller = self.strip_controller.borrow_mut();
-        let r = controller.r;
-        let g = controller.g;
-        controller
-            .send_rgb_color(r, g, self.value)
-            .expect("failed to send rgb color")
     }
 
     fn get(&self) -> u8 {
