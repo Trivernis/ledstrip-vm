@@ -1,3 +1,11 @@
+use crate::registers::{Register, RCS};
+use crate::runtime::Runtime;
+use std::borrow::BorrowMut;
+use std::io;
+use std::panic::resume_unwind;
+use std::thread::sleep;
+use std::time::Duration;
+
 const T_NOP: u8 = 0x00;
 const T_EXIT: u8 = 0x01;
 const T_SET: u8 = 0x02;
@@ -22,6 +30,7 @@ const T_CMD: u8 = 0xF1;
 
 pub trait Token {
     fn to_bytecode(&self) -> Vec<u8>;
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()>;
 }
 
 pub trait FromBytecode {
@@ -33,6 +42,9 @@ pub struct NopToken;
 impl Token for NopToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_NOP]
+    }
+    fn invoke(&self, _: &mut Runtime) -> io::Result<()> {
+        Ok(())
     }
 }
 
@@ -50,6 +62,20 @@ impl Token for ExitToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_EXIT, self.register]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        let mut exit_code = 0;
+        if let Some(rg) = runtime.get_1byte_register(self.register) {
+            exit_code = rg.get();
+        } else if let Some(rg) = runtime.get_4byte_register(self.register) {
+            exit_code = rg.get() as u8;
+        } else if self.register == RCS {
+            exit_code = runtime.rcs.get() as u8;
+        }
+        runtime.exit(exit_code);
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for ExitToken {
@@ -66,6 +92,18 @@ pub struct SetToken {
 impl Token for SetToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_SET, self.value, self.register]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        if let Some(mut rg) = runtime.get_1byte_register(self.register) {
+            rg.set(self.value);
+        } else if let Some(mut rg) = runtime.get_4byte_register(self.register) {
+            rg.set(self.value as u32);
+        } else if self.register == RCS {
+            runtime.rcs.set(self.value == 0);
+        }
+
+        Ok(())
     }
 }
 
@@ -87,6 +125,26 @@ impl Token for CopyToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_COPY, self.register_1, self.register_2]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        let mut value = 0u32;
+        if let Some(rg) = runtime.get_1byte_register(self.register_1) {
+            value = rg.get() as u32;
+        } else if let Some(rg) = runtime.get_4byte_register(self.register_1) {
+            value = rg.get();
+        } else if self.register_1 == RCS {
+            value = runtime.rcs.get() as u32;
+        }
+        if let Some(mut rg) = runtime.get_1byte_register(self.register_2) {
+            rg.set(value as u8);
+        } else if let Some(mut rg) = runtime.get_4byte_register(self.register_2) {
+            rg.set(value);
+        } else if self.register_2 == RCS {
+            runtime.rcs.set(value == 0);
+        }
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for CopyToken {
@@ -104,6 +162,17 @@ impl Token for LoadToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_LOAD]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        let pointer = runtime.rgp.get();
+        if let Some(value) = runtime.memory.get(&pointer) {
+            runtime.rgd.set(*value);
+        } else {
+            runtime.rgd.set(0);
+        }
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for LoadToken {
@@ -120,6 +189,18 @@ impl Token for ClearToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_CLEAR, self.register]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        if let Some(mut rg) = runtime.get_1byte_register(self.register) {
+            rg.set(0u8);
+        } else if let Some(mut rg) = runtime.get_4byte_register(self.register) {
+            rg.set(0u32);
+        } else if self.register == RCS {
+            runtime.rcs.set(false);
+        }
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for ClearToken {
@@ -133,6 +214,12 @@ pub struct WriteToken;
 impl Token for WriteToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_WRITE]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.memory.insert(runtime.rgp.get(), runtime.rgd.get());
+
+        Ok(())
     }
 }
 
@@ -148,6 +235,12 @@ impl Token for LabelToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_LABEL]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.create_label(runtime.rgl.get());
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for LabelToken {
@@ -161,6 +254,10 @@ pub struct GotoToken;
 impl Token for GotoToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_GOTO]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.jump(runtime.rgl.get())
     }
 }
 
@@ -176,6 +273,12 @@ impl Token for AddToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_ADD]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgo.get() + runtime.rgi.get());
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for AddToken {
@@ -189,6 +292,12 @@ pub struct SubToken;
 impl Token for SubToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_SUB]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() - runtime.rgi.get());
+
+        Ok(())
     }
 }
 
@@ -204,6 +313,12 @@ impl Token for MulToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_MUL]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() * runtime.rgi.get());
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for MulToken {
@@ -217,6 +332,12 @@ pub struct DivToken;
 impl Token for DivToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_DIV]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() / runtime.rgi.get());
+
+        Ok(())
     }
 }
 
@@ -232,6 +353,12 @@ impl Token for ModToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_MOD]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() % runtime.rgi.get());
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for ModToken {
@@ -245,6 +372,12 @@ pub struct LshToken;
 impl Token for LshToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_LSH]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() << runtime.rgi.get());
+
+        Ok(())
     }
 }
 
@@ -260,6 +393,12 @@ impl Token for RshToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_RSH]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() >> runtime.rgi.get());
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for RshToken {
@@ -273,6 +412,14 @@ pub struct JgToken;
 impl Token for JgToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_JG]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        if runtime.rgd.get() > runtime.rgi.get() {
+            runtime.jump(runtime.rgl.get())?;
+        }
+
+        Ok(())
     }
 }
 
@@ -288,6 +435,14 @@ impl Token for JlToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_JL]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        if runtime.rgd.get() < runtime.rgi.get() {
+            runtime.jump(runtime.rgl.get())?;
+        }
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for JlToken {
@@ -301,6 +456,14 @@ pub struct JeToken;
 impl Token for JeToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_JE]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        if runtime.rgd.get() == runtime.rgi.get() {
+            runtime.jump(runtime.rgl.get())?;
+        }
+
+        Ok(())
     }
 }
 
@@ -316,6 +479,12 @@ impl Token for PauseToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_PAUSE]
     }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        sleep(Duration::from_millis(runtime.rgd.get() as u64));
+
+        Ok(())
+    }
 }
 
 impl FromBytecode for PauseToken {
@@ -329,6 +498,12 @@ pub struct CmdToken;
 impl Token for CmdToken {
     fn to_bytecode(&self) -> Vec<u8> {
         vec![T_CMD]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        unimplemented!();
+
+        Ok(())
     }
 }
 

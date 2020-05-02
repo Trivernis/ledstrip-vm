@@ -1,4 +1,4 @@
-use ledstrip_vm::registers::get_register_by_name;
+use ledstrip_vm::registers::get_register_code_by_name;
 use ledstrip_vm::tokens::{
     AddToken, ClearToken, CmdToken, CopyToken, DivToken, ExitToken, GotoToken, JeToken, JgToken,
     JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, RshToken, SetToken,
@@ -60,22 +60,22 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
 
     match instr_parts.next()? {
         "exit" => some_box!(ExitToken {
-            register: get_register_by_name(instr_parts.next()?)?,
+            register: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "set" => some_box!(SetToken {
             value: parse_value(instr_parts.next()?).expect(&format!(
                 "Failed to parse the hex value into a u8: {}.",
                 line
             )),
-            register: get_register_by_name(instr_parts.next()?)?,
+            register: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "copy" => some_box!(CopyToken {
-            register_1: get_register_by_name(instr_parts.next()?)?,
-            register_2: get_register_by_name(instr_parts.next()?)?,
+            register_1: get_register_code_by_name(instr_parts.next()?)?,
+            register_2: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "load" => some_box!(LoadToken),
         "clear" => some_box!(ClearToken {
-            register: get_register_by_name(instr_parts.next()?)?,
+            register: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "write" => some_box!(WriteToken),
         "label" => some_box!(LabelToken),

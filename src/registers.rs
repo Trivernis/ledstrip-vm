@@ -13,7 +13,7 @@ pub const RGO: u8 = 0x08;
 pub const RGL: u8 = 0x09;
 
 /// Maps a register name to the bytecode value
-pub fn get_register_by_name(name: &str) -> Option<u8> {
+pub fn get_register_code_by_name(name: &str) -> Option<u8> {
     let item = [
         ("rcs", RCS),
         ("rcr", RCR),
