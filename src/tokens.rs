@@ -629,8 +629,6 @@ impl Token for CmdToken {
 
     fn invoke(&self, _: &mut Runtime) -> io::Result<()> {
         unimplemented!();
-
-        Ok(())
     }
 }
 

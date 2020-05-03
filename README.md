@@ -35,7 +35,7 @@ A virtual machine for controlling a wifi led strip.
 | jl (rgd, rgi, rgl)  | jumps to rgl if rgd < rgi                                                    | 0x21 |
 | je (rgd, rgi, rgl)  | jumps to rgl if rgd == rgi                                                   | 0x22 |
 | pause (rgd)         | pauses for rgd milliseconds                                                  | 0xF0 |
-| cmd (rgd)           | executes the command in rgd                                                  | 0xF1 |
+| cmd (rgd) (currently not supported)           | executes the command in rgd                                                  | 0xF1 |
 | send (rcr, rcg, rcb)| sends the values stored in the color registers to the strip                  | 0xF2 |
 
 ### Registers

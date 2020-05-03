@@ -143,10 +143,10 @@ impl Runtime {
         let text = text_ref.borrow_mut();
         while self.current_index < text.len() {
             let token = text.get(self.current_index).unwrap();
-            token.invoke(self)?;
             if self.debug {
-                println!("{:?}", token);
+                println!("{:0>4}: {:?}", self.current_index, token);
             }
+            token.invoke(self)?;
 
             if let Some(code) = self.exit {
                 self.strip_controller
