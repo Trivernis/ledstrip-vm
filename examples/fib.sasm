@@ -1,0 +1,66 @@
+# set the initial pointer value for the next fibonacci numbers
+set 0x04 rgd
+set 0x00 rgp
+write
+
+# first two numbers (0, 1)
+set 0x00 rgd
+set 0x02 rgp
+write
+set 0x01 rgd
+set 0x03 rgp
+write
+
+# all other numbers
+label 0x00
+set 0x00 rgp
+load            # load the pointer for the next value
+set 0x01 rgi
+sub
+copy rgo rgp
+load            # load the value F-1
+set 0x01 rgp
+write           # write the value to a temp location
+set 0x00 rgp    # load the pointer for the next value
+load
+set 0x02 rgi
+sub
+copy rgo rgp
+load            # load the value F-2
+copy rgd rgi    # copy the value to rgi
+set 0x01 rgp
+load            # load the temporary value F-1
+add             # add F-1 and F-2
+copy rgo rgd
+write           # write the value to the temporary location
+set 0x00 rgp
+load            # load the pointer for the next value
+copy rgd rgo    # store the value in rgo temporarily
+set 0x01 rgp
+load
+copy rgo rgp    # copy the pointer from rgo to rgp
+write           # write the value to the pointer for the next value
+copy rgp rgd    # copy the pointer address to rgd
+set 0x01 rgi
+add             # add 1 to the address to get the next one
+copy rgo rgd
+set 0x00 rgp
+write           # write the next address into 0x00
+set 50 rgi
+jl
+
+# print all values
+set 0x00 rgp
+load            # load the pointer to the next value
+set 0x01 rgl
+label 0x01      # create a label to jump back
+set 0x01 rgi
+sub
+copy rgo rgp    # subtract the pointer by one to get the previous value
+load
+print rgd       # print the loaded previous value
+copy rgp rgd
+set 0x02 rgi
+jg              # jump if the pointer is greater than 2 (the numbers start at 0x03)
+
+debug
