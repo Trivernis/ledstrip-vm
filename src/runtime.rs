@@ -5,10 +5,10 @@ use crate::registers::{
 use crate::tokens::{
     AddToken, AndToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken,
     FromBytecode, GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken,
-    MulToken, NopToken, NotToken, NrtToken, OrToken, PauseToken, PowToken, PrintToken, RshToken,
-    SendToken, SetToken, SubToken, Token, WriteToken, XorToken, T_ADD, T_AND, T_CLEAR, T_CMD,
-    T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL,
-    T_NOT, T_NRT, T_OR, T_PAUSE, T_POW, T_PRINT, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE, T_XOR,
+    MulToken, NotToken, NrtToken, OrToken, PauseToken, PowToken, PrintToken, RshToken, SendToken,
+    SetToken, SubToken, Token, WriteToken, XorToken, T_ADD, T_AND, T_CLEAR, T_CMD, T_COPY, T_DEBUG,
+    T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL, T_NOT, T_NRT,
+    T_OR, T_PAUSE, T_POW, T_PRINT, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE, T_XOR,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -32,6 +32,7 @@ pub struct Runtime {
     pub strip_controller: Rc<RefCell<LedStripController>>,
     exit: Option<u8>,
     current_index: usize,
+    debug: bool,
 }
 
 impl Runtime {
@@ -56,7 +57,13 @@ impl Runtime {
             strip_controller: controller,
             exit: None,
             current_index: 0,
+            debug: false,
         }
+    }
+
+    /// Sets debug to the specified value
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug = debug;
     }
 
     /// Parses a vector containing the bytecode into a vector of tokens
@@ -137,6 +144,9 @@ impl Runtime {
         while self.current_index < text.len() {
             let token = text.get(self.current_index).unwrap();
             token.invoke(self)?;
+            if self.debug {
+                println!("{:?}", token);
+            }
 
             if let Some(code) = self.exit {
                 self.strip_controller

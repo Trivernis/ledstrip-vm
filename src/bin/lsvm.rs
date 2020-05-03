@@ -6,6 +6,9 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 struct Opts {
+    #[structopt(long)]
+    debug: bool,
+
     #[structopt(short = "i", name = "input")]
     input_file: String,
 
@@ -22,6 +25,7 @@ fn main() -> io::Result<()> {
 
     let mut runtime = Runtime::new(&opts.ip, opts.port);
     let start = Instant::now();
+    runtime.set_debug(opts.debug);
     runtime.parse_bytecode(bytecode);
     println!("Parsing took {:?}\n", start.elapsed());
 

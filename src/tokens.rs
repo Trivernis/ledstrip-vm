@@ -1,8 +1,8 @@
 use crate::registers::{Register, RCS};
 use crate::runtime::Runtime;
 use num_integer::Roots;
+use std::fmt::Debug;
 use std::io;
-use std::mem;
 use std::ops::BitXor;
 use std::thread::sleep;
 use std::time::Duration;
@@ -38,7 +38,7 @@ pub const T_PAUSE: u8 = 0xF0;
 pub const T_CMD: u8 = 0xF1;
 pub const T_SEND: u8 = 0xF2;
 
-pub trait Token {
+pub trait Token: Debug {
     fn to_bytecode(&self) -> Vec<u8>;
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()>;
 }
@@ -108,9 +108,9 @@ impl Token for SetToken {
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        if let Some(mut rg) = runtime.get_1byte_register(self.register) {
+        if let Some(rg) = &mut runtime.get_1byte_register(self.register) {
             rg.set(self.value);
-        } else if let Some(mut rg) = runtime.get_4byte_register(self.register) {
+        } else if let Some(rg) = &mut runtime.get_4byte_register(self.register) {
             rg.set(self.value as u32);
         } else if self.register == RCS {
             runtime.rcs.set(self.value != 0);
@@ -141,7 +141,7 @@ impl Token for CopyToken {
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        let mut value = 0u32;
+        let value;
         if let Some(rg) = runtime.get_1byte_register(self.register_1) {
             value = rg.get() as u32;
         } else if let Some(rg) = runtime.get_4byte_register(self.register_1) {
@@ -152,9 +152,9 @@ impl Token for CopyToken {
             panic!("unknown register {}", self.register_1);
         }
 
-        if let Some(mut rg) = runtime.get_1byte_register(self.register_2) {
+        if let Some(rg) = &mut runtime.get_1byte_register(self.register_2) {
             rg.set(value as u8);
-        } else if let Some(mut rg) = runtime.get_4byte_register(self.register_2) {
+        } else if let Some(rg) = &mut runtime.get_4byte_register(self.register_2) {
             rg.set(value);
         } else if self.register_2 == RCS {
             runtime.rcs.set(value != 0);
@@ -212,9 +212,9 @@ impl Token for ClearToken {
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        if let Some(mut rg) = runtime.get_1byte_register(self.register) {
+        if let Some(rg) = &mut runtime.get_1byte_register(self.register) {
             rg.set(0u8);
-        } else if let Some(mut rg) = runtime.get_4byte_register(self.register) {
+        } else if let Some(rg) = &mut runtime.get_4byte_register(self.register) {
             rg.set(0u32);
         } else if self.register == RCS {
             runtime.rcs.set(false);
@@ -331,7 +331,7 @@ impl Token for PrintToken {
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        let mut value = if let Some(rg) = runtime.get_1byte_register(self.register) {
+        let value = if let Some(rg) = runtime.get_1byte_register(self.register) {
             rg.get() as u32
         } else if let Some(rg) = runtime.get_4byte_register(self.register) {
             rg.get()
@@ -536,6 +536,7 @@ impl Token for PowToken {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct NrtToken;
 
 impl Token for NrtToken {
@@ -626,13 +627,14 @@ impl Token for CmdToken {
         vec![T_CMD]
     }
 
-    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+    fn invoke(&self, _: &mut Runtime) -> io::Result<()> {
         unimplemented!();
 
         Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SendToken;
 
 impl Token for SendToken {
