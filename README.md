@@ -25,6 +25,12 @@ A virtual machine for controlling a wifi led strip.
 | mod (rgd, rgi, rgo) | applies mod rgd, rgi and writes the result to rgo                            | 0x14 |
 | lsh (rgd, rgi, rgo) | bitshifts rgd by rgi to the left and writes the output to rgo                | 0x15 |
 | rsh (rgd, rgi,rgo)  | bitshifts rgd by rgi to the right and writes the output to rgo               | 0x16 |
+| and (rgd, rgi, rgo) | bitwise rgd and rgi -> rgo | 0x17 |
+| or (rgd, rgi, rgo)  | bitwise rgd or rgi -> rgo | 0x18 |
+| not (rgd, rgo)      | bitwise not rgd -> rgo | 0x19 |
+| xor (rgd, rgi, rgo) | bitwise rgd xor rgi -> rgo | 0x1A |
+| pow (rgd, rgi, rgo) | rgo to the power of rgi -> rgo | 0x1B|
+| nrt (rgd, rgi, rgo ) | the nth root of rgd (n = rgi) -> rgo | 0x1C | 
 | jg (rgd, rgi, rgl)  | jumps to rgl if rgd > rgi                                                    | 0x20 |
 | jl (rgd, rgi, rgl)  | jumps to rgl if rgd < rgi                                                    | 0x21 |
 | je (rgd, rgi, rgl)  | jumps to rgl if rgd == rgi                                                   | 0x22 |

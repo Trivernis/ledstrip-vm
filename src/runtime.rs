@@ -3,11 +3,12 @@ use crate::registers::{
     Rcb, Rcg, Rcr, Rcs, Register, Rgd, Rgi, Rgl, Rgo, Rgp, RCB, RCG, RCR, RGD, RGI, RGL, RGO, RGP,
 };
 use crate::tokens::{
-    AddToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken, FromBytecode,
-    GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken,
-    PauseToken, PrintToken, RshToken, SendToken, SetToken, SubToken, Token, WriteToken, T_ADD,
-    T_CLEAR, T_CMD, T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD,
-    T_LSH, T_MOD, T_MUL, T_PAUSE, T_PRINT, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE,
+    AddToken, AndToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken,
+    FromBytecode, GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken,
+    MulToken, NopToken, NotToken, NrtToken, OrToken, PauseToken, PowToken, PrintToken, RshToken,
+    SendToken, SetToken, SubToken, Token, WriteToken, XorToken, T_ADD, T_AND, T_CLEAR, T_CMD,
+    T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL,
+    T_NOT, T_NRT, T_OR, T_PAUSE, T_POW, T_PRINT, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE, T_XOR,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -111,6 +112,12 @@ impl Runtime {
                 T_MOD => text.push(Box::new(ModToken)),
                 T_LSH => text.push(Box::new(LshToken)),
                 T_RSH => text.push(Box::new(RshToken)),
+                T_AND => text.push(Box::new(AndToken)),
+                T_OR => text.push(Box::new(OrToken)),
+                T_NOT => text.push(Box::new(NotToken)),
+                T_XOR => text.push(Box::new(XorToken)),
+                T_POW => text.push(Box::new(PowToken)),
+                T_NRT => text.push(Box::new(NrtToken)),
                 T_JG => text.push(Box::new(JgToken)),
                 T_JL => text.push(Box::new(JlToken)),
                 T_JE => text.push(Box::new(JeToken)),

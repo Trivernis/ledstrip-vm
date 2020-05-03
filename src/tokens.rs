@@ -1,7 +1,9 @@
 use crate::registers::{Register, RCS};
 use crate::runtime::Runtime;
+use num_integer::Roots;
 use std::io;
 use std::mem;
+use std::ops::BitXor;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -23,6 +25,12 @@ pub const T_DIV: u8 = 0x13;
 pub const T_MOD: u8 = 0x14;
 pub const T_LSH: u8 = 0x15;
 pub const T_RSH: u8 = 0x16;
+pub const T_AND: u8 = 0x17;
+pub const T_OR: u8 = 0x18;
+pub const T_NOT: u8 = 0x19;
+pub const T_XOR: u8 = 0x1A;
+pub const T_POW: u8 = 0x1B;
+pub const T_NRT: u8 = 0x1C;
 pub const T_JG: u8 = 0x20;
 pub const T_JL: u8 = 0x21;
 pub const T_JE: u8 = 0x22;
@@ -444,6 +452,101 @@ impl Token for RshToken {
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
         runtime.rgo.set(runtime.rgd.get() >> runtime.rgi.get());
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AndToken;
+
+impl Token for AndToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_AND]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() & runtime.rgi.get());
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct OrToken;
+
+impl Token for OrToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_OR]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get() | runtime.rgi.get());
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct NotToken;
+
+impl Token for NotToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_NOT]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(!runtime.rgd.get());
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct XorToken;
+
+impl Token for XorToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_XOR]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(runtime.rgd.get().bitxor(runtime.rgi.get()));
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PowToken;
+
+impl Token for PowToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_POW]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime.rgo.set(
+            (runtime.rgd.get() as f32)
+                .powi(runtime.rgi.get() as i32)
+                .round() as u32,
+        );
+
+        Ok(())
+    }
+}
+
+pub struct NrtToken;
+
+impl Token for NrtToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_NRT]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        runtime
+            .rgo
+            .set(runtime.rgd.get().nth_root(runtime.rgi.get()));
 
         Ok(())
     }

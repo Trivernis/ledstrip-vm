@@ -1,8 +1,9 @@
 use ledstrip_vm::registers::get_register_code_by_name;
 use ledstrip_vm::tokens::{
-    AddToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken, GotoToken, JeToken,
-    JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken, PauseToken, PrintToken,
-    RshToken, SendToken, SetToken, SubToken, Token, WriteToken,
+    AddToken, AndToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken,
+    GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken,
+    NotToken, NrtToken, OrToken, PauseToken, PowToken, PrintToken, RshToken, SendToken, SetToken,
+    SubToken, Token, WriteToken, XorToken,
 };
 use std::fs::{read_to_string, File};
 use std::io;
@@ -95,6 +96,12 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
         "mod" => some_box!(ModToken),
         "lsh" => some_box!(LshToken),
         "rsh" => some_box!(RshToken),
+        "and" => some_box!(AndToken),
+        "or" => some_box!(OrToken),
+        "not" => some_box!(NotToken),
+        "xor" => some_box!(XorToken),
+        "pow" => some_box!(PowToken),
+        "nrt" => some_box!(NrtToken),
         "jg" => some_box!(JgToken),
         "jl" => some_box!(JlToken),
         "je" => some_box!(JeToken),
