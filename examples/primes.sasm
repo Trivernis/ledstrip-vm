@@ -90,6 +90,5 @@ set 0x03 rgl
 goto            # go back to the beginning
 
 label 0xFF
-debug
 clear rgd
 exit rgd
