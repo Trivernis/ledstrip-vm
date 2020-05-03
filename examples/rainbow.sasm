@@ -75,7 +75,7 @@ copy rgo rgd
 set 0xFF rgi
 set 0x04 rgl
 jl
-
+rainbow
 # decrease green
 label 0x05
 set 0xFF rgd
