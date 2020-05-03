@@ -1,6 +1,7 @@
 use crate::registers::{Register, RCS};
 use crate::runtime::Runtime;
 use std::io;
+use std::mem;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -242,23 +243,30 @@ impl FromBytecode for WriteToken {
 }
 
 #[derive(Debug, Clone)]
-pub struct LabelToken;
+pub struct LabelToken {
+    pub value: u32,
+}
 
 impl Token for LabelToken {
     fn to_bytecode(&self) -> Vec<u8> {
-        vec![T_LABEL]
+        let mut bytecode = vec![T_LABEL];
+        bytecode.append(&mut self.value.to_be_bytes().to_vec());
+
+        bytecode
     }
 
     fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
-        runtime.create_label(runtime.rgl.get());
+        runtime.create_label(self.value);
 
         Ok(())
     }
 }
 
 impl FromBytecode for LabelToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
+    fn from_bytecode(code: &[&u8]) -> Self {
+        Self {
+            value: u32::from_be_bytes([*code[1], *code[2], *code[3], *code[4]]),
+        }
     }
 }
 
@@ -295,6 +303,7 @@ impl Token for DebugToken {
         println!("rgo: {}", runtime.rgo.get());
         println!("rgl: {}", runtime.rgl.get());
         println!("\n--- Runtime ---");
+        println!("Labels: {:?}", runtime.labels);
         println!("Memory: {:?}", runtime.memory);
         println!();
 

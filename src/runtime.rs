@@ -27,7 +27,7 @@ pub struct Runtime {
     pub rgl: Rgl,
     pub memory: HashMap<u32, u32>,
     text: Rc<RefCell<Vec<Box<dyn Token>>>>,
-    labels: HashMap<u32, usize>,
+    pub labels: HashMap<u32, usize>,
     pub strip_controller: Rc<RefCell<LedStripController>>,
     exit: Option<u8>,
     current_index: usize,
@@ -63,6 +63,7 @@ impl Runtime {
     pub fn parse_bytecode(&mut self, bytecode: Vec<u8>) {
         let mut code_iter = bytecode.iter();
         let mut text = self.text.borrow_mut();
+        let mut index = 0;
 
         while let Some(instruction) = code_iter.next() {
             match *instruction {
@@ -86,7 +87,17 @@ impl Runtime {
                     code_iter.next().unwrap(),
                 ]))),
                 T_WRITE => text.push(Box::new(WriteToken)),
-                T_LABEL => text.push(Box::new(LabelToken)),
+                T_LABEL => {
+                    let token = LabelToken::from_bytecode(&[
+                        instruction,
+                        code_iter.next().unwrap(),
+                        code_iter.next().unwrap(),
+                        code_iter.next().unwrap(),
+                        code_iter.next().unwrap(),
+                    ]);
+                    self.labels.insert(token.value, index);
+                    text.push(Box::new(token));
+                }
                 T_GOTO => text.push(Box::new(GotoToken)),
                 T_DEBUG => text.push(Box::new(DebugToken)),
                 T_ADD => text.push(Box::new(AddToken)),
@@ -104,6 +115,7 @@ impl Runtime {
                 T_SEND => text.push(Box::new(SendToken)),
                 _ => panic!("unknown instruction {}", instruction),
             };
+            index += 1;
         }
     }
 

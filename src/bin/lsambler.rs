@@ -68,7 +68,7 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
             value: parse_value(instr_parts.next()?).expect(&format!(
                 "Failed to parse the hex value into a u8: {}.",
                 line
-            )),
+            )) as u8,
             register: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "copy" => some_box!(CopyToken {
@@ -80,7 +80,9 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
             register: get_register_code_by_name(instr_parts.next()?)?,
         }),
         "write" => some_box!(WriteToken),
-        "label" => some_box!(LabelToken),
+        "label" => some_box!(LabelToken {
+            value: parse_value(instr_parts.next()?).expect("Failed to parse label name")
+        }),
         "goto" => some_box!(GotoToken),
         "debug" => some_box!(DebugToken),
         "add" => some_box!(AddToken),
@@ -102,11 +104,11 @@ fn get_token(line: &str) -> Option<Box<dyn Token>> {
 
 /// Parses a value depending on if it starts with 0x (as a hex value)
 /// or just is a plain base-10 number
-fn parse_value(value: &str) -> Result<u8, ParseIntError> {
+fn parse_value(value: &str) -> Result<u32, ParseIntError> {
     if value.starts_with("0x") {
         let value = value.trim_start_matches("0x");
-        Ok(i64::from_str_radix(value, 16)? as u8)
+        Ok(i64::from_str_radix(value, 16)? as u32)
     } else {
-        value.parse::<u8>()
+        value.parse::<u32>()
     }
 }
