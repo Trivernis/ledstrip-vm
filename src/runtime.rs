@@ -5,9 +5,9 @@ use crate::registers::{
 use crate::tokens::{
     AddToken, ClearToken, CmdToken, CopyToken, DebugToken, DivToken, ExitToken, FromBytecode,
     GotoToken, JeToken, JgToken, JlToken, LabelToken, LoadToken, LshToken, ModToken, MulToken,
-    PauseToken, RshToken, SendToken, SetToken, SubToken, Token, WriteToken, T_ADD, T_CLEAR, T_CMD,
-    T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD, T_LSH, T_MOD, T_MUL,
-    T_PAUSE, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE,
+    PauseToken, PrintToken, RshToken, SendToken, SetToken, SubToken, Token, WriteToken, T_ADD,
+    T_CLEAR, T_CMD, T_COPY, T_DEBUG, T_DIV, T_EXIT, T_GOTO, T_JE, T_JG, T_JL, T_LABEL, T_LOAD,
+    T_LSH, T_MOD, T_MUL, T_PAUSE, T_PRINT, T_RSH, T_SEND, T_SET, T_SUB, T_WRITE,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -100,6 +100,10 @@ impl Runtime {
                 }
                 T_GOTO => text.push(Box::new(GotoToken)),
                 T_DEBUG => text.push(Box::new(DebugToken)),
+                T_PRINT => text.push(Box::new(PrintToken::from_bytecode(&[
+                    instruction,
+                    code_iter.next().unwrap(),
+                ]))),
                 T_ADD => text.push(Box::new(AddToken)),
                 T_SUB => text.push(Box::new(SubToken)),
                 T_MUL => text.push(Box::new(MulToken)),

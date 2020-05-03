@@ -15,6 +15,7 @@ pub const T_WRITE: u8 = 0x06;
 pub const T_LABEL: u8 = 0x07;
 pub const T_GOTO: u8 = 0x08;
 pub const T_DEBUG: u8 = 0x09;
+pub const T_PRINT: u8 = 0x0A;
 pub const T_ADD: u8 = 0x10;
 pub const T_SUB: u8 = 0x11;
 pub const T_MUL: u8 = 0x12;
@@ -311,9 +312,36 @@ impl Token for DebugToken {
     }
 }
 
-impl FromBytecode for GotoToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
+#[derive(Debug, Clone)]
+pub struct PrintToken {
+    pub register: u8,
+}
+
+impl Token for PrintToken {
+    fn to_bytecode(&self) -> Vec<u8> {
+        vec![T_PRINT, self.register]
+    }
+
+    fn invoke(&self, runtime: &mut Runtime) -> io::Result<()> {
+        let mut value = if let Some(rg) = runtime.get_1byte_register(self.register) {
+            rg.get() as u32
+        } else if let Some(rg) = runtime.get_4byte_register(self.register) {
+            rg.get()
+        } else if self.register == RCS {
+            runtime.rcs.get() as u32
+        } else {
+            0
+        };
+
+        println!("{}", value);
+
+        Ok(())
+    }
+}
+
+impl FromBytecode for PrintToken {
+    fn from_bytecode(code: &[&u8]) -> Self {
+        Self { register: *code[1] }
     }
 }
 
@@ -331,13 +359,6 @@ impl Token for AddToken {
         Ok(())
     }
 }
-
-impl FromBytecode for AddToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct SubToken;
 
@@ -350,12 +371,6 @@ impl Token for SubToken {
         runtime.rgo.set(runtime.rgd.get() - runtime.rgi.get());
 
         Ok(())
-    }
-}
-
-impl FromBytecode for SubToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
     }
 }
 
@@ -374,12 +389,6 @@ impl Token for MulToken {
     }
 }
 
-impl FromBytecode for MulToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct DivToken;
 
@@ -392,12 +401,6 @@ impl Token for DivToken {
         runtime.rgo.set(runtime.rgd.get() / runtime.rgi.get());
 
         Ok(())
-    }
-}
-
-impl FromBytecode for DivToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
     }
 }
 
@@ -416,12 +419,6 @@ impl Token for ModToken {
     }
 }
 
-impl FromBytecode for ModToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct LshToken;
 
@@ -437,12 +434,6 @@ impl Token for LshToken {
     }
 }
 
-impl FromBytecode for LshToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct RshToken;
 
@@ -455,12 +446,6 @@ impl Token for RshToken {
         runtime.rgo.set(runtime.rgd.get() >> runtime.rgi.get());
 
         Ok(())
-    }
-}
-
-impl FromBytecode for RshToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
     }
 }
 
@@ -481,12 +466,6 @@ impl Token for JgToken {
     }
 }
 
-impl FromBytecode for JgToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct JlToken;
 
@@ -501,12 +480,6 @@ impl Token for JlToken {
         }
 
         Ok(())
-    }
-}
-
-impl FromBytecode for JlToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
     }
 }
 
@@ -527,12 +500,6 @@ impl Token for JeToken {
     }
 }
 
-impl FromBytecode for JeToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct PauseToken;
 
@@ -548,12 +515,6 @@ impl Token for PauseToken {
     }
 }
 
-impl FromBytecode for PauseToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct CmdToken;
 
@@ -566,12 +527,6 @@ impl Token for CmdToken {
         unimplemented!();
 
         Ok(())
-    }
-}
-
-impl FromBytecode for CmdToken {
-    fn from_bytecode(_: &[&u8]) -> Self {
-        Self
     }
 }
 
