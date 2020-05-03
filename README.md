@@ -14,10 +14,10 @@ A virtual machine for controlling a wifi led strip.
 | load (rgp, rgd)     | loads the value the pointer register points to into the data register        | 0x04 |
 | clear \<rg>         | clears a register (sets it to 0x00)                                          | 0x05 |
 | write (rgd, rgp)    | writes the value in the data register to the address of the pointer register | 0x06 |
-| label <u32>         | creates a label at the current position.                                     | 0x07 |
+| label \<u32>         | creates a label at the current position.                                     | 0x07 |
 | goto (rgl)          | goes to the label with name rgl                                              | 0x08 |
 | debug (*)           | prints out the state for debug information                                   | 0x09 |
-| print <rg>          | prints the value of a register                                               | 0x0A |
+| print \<rg>          | prints the value of a register                                               | 0x0A |
 | add (rgd, rgi, rgo) | adds the value of rgi to the value of rgd and writes the result into rgo     | 0x10 |
 | sub (rgd, rgi, rgo) | substracts rgi from rgd and writes the result into rgo                       | 0x11 |
 | mul (rgd, rgi, rgo) | multiplies rgd by rgi and writes the result to rgo                           | 0x12 |
