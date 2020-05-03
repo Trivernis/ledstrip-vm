@@ -1,0 +1,95 @@
+set 0xFF rcs
+set 0xFF rcb
+
+# increase red
+label 0x01
+set 0xFF rgd
+send
+pause
+pause
+copy rcr rgd
+set 0x0F rgi
+add
+copy rgo rcr
+copy rgo rgd
+set 0xFF rgi
+set 0x01 rgl
+jl
+
+# decrease blue
+label 0x06
+set 0xFF rgd
+send
+pause
+pause
+set 0x0F rgi
+copy rcb rgd
+sub
+copy rgo rcb
+copy rgo rgd
+clear rgi
+set 0x06 rgl
+jg
+
+# increase green
+label 0x02
+set 0xFF rgd
+send
+pause
+pause
+set 0x0F rgi
+copy rcg rgd
+add
+copy rgo rcg
+copy rgo rgd
+set 0xFF rgi
+set 0x02 rgl
+jl
+
+# decrease red
+label 0x03
+set 0xFF rgd
+send
+pause
+pause
+set 0x0F rgi
+copy rcr rgd
+sub
+copy rgo rcr
+copy rgo rgd
+clear rgi
+set 0x03 rgl
+jg
+
+# increase blue
+label 0x04
+set 0xFF rgd
+send
+pause
+pause
+set 0x0F rgi
+copy rcb rgd
+add
+copy rgo rcb
+copy rgo rgd
+set 0xFF rgi
+set 0x04 rgl
+jl
+
+# decrease green
+label 0x05
+set 0xFF rgd
+send
+pause
+pause
+set 0x0F rgi
+copy rcg rgd
+sub
+copy rgo rcg
+copy rgo rgd
+clear rgi
+set 0x05 rgl
+jg
+
+set 0x01 rgl
+goto

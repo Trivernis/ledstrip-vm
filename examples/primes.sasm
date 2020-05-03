@@ -1,4 +1,79 @@
-# memory structure prt_next_val, counter, current_number, numbers...
+# memory structure: prt_next_val, counter, current_number, numbers...
+
+set 0x03 rgp
+write
+set 0x02 rgp
+set 0x03 rgd
+write
+set 0x01 rgp
+set 0x02 rgd
+write
+
+# loop through all numbers until the current one to check by divisibility
+label 0x03
+set 0x01 rgp
+load            # load the current counter value
+copy rgd rgi
+set 0x02 rgp
+load            # load the current number
+mod
+copy rgo rgd    # copy the modulus result to rgd
+clear rgi
+set 0x01 rgl
+je              # check if the result is 0
+set 0x01 rgp
+load
+set 0x01 rgi
+add
+copy rgo rgd
+write           # increase the counter by one and write it back
+set 0x02 rgp
+load            # load the current number
+set 0x02 rgi
+nrt
+set 0x01 rgp
+load            # load the current counter
+copy rgd rgi
+copy rgo rgd
+set 0x04 rgl
+je              # jump to 0x04 if the counter has reached the square root of the current number
+set 0x03 rgl
+goto            # repeat if the counter is still smaller than the current number
+
+# -- exit jump to avoid undefined behaviour
+set 0xFF rgl
+goto
+# -- write the current number and load the next
+label 0x04
+set 0x02 rgp
+set 0xFF rgi
+set 0xFF rgd
+mul             # calculate 0xFF * 0xFF
+copy rgo rgi
+load
+set 0xFF rgl
+jg              # jump to the end if the current number is larger than 0xFF * 0xFF
+set 0x00 rgp
+load            # load the current pointer value
+set 0x01 rgi
+add             # increase the value by 1
+copy rgo rgd
+write           # write back the increased value
+set 0x02 rgp
+load            # load the current number
+print rgd
+copy rgd rgo    # temporarily store the number in rgo
+set 0x00 rgp
+load            # load the pointer value
+copy rgd rgp
+copy rgo rgd    # load the current number back into rgd
+write           # write the current number
+set 0x01 rgl
+goto            # goto the part that increases the current value
+
+
+# -- exit jump to avoid undefined behaviour
+set 0xFF rgl# memory structure prt_next_val, counter, current_number, numbers...
 
 set 0x03 rgp
 write
@@ -74,6 +149,25 @@ goto            # goto the part that increases the current value
 
 # -- exit jump to avoid undefined behaviour
 set 0xFF rgl
+goto
+# -- skips to the next number
+label 0x01
+set 0x02 rgp
+load            # load the current number
+set 0x02 rgi
+add             # add 2 to it
+copy rgo rgd
+write           # write it back
+set 0x01 rgp
+set 0x02 rgd
+write           # set the counter back to 2
+set 0x03 rgl
+goto            # go back to the beginning
+
+label 0xFF
+debug
+clear rgd
+exit rgd
 goto
 # -- skips to the next number
 label 0x01
