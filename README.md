@@ -1,4 +1,6 @@
 # LED Strip VM ![](https://img.shields.io/discord/729250668162056313)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrivernis%2Fledstrip-vm.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrivernis%2Fledstrip-vm?ref=badge_shield)
+
 
 A virtual machine for controlling a wifi led strip.
 
@@ -69,3 +71,7 @@ The runtime works in three stages.
 2. Parse the bytecode into a vector of tokens
     - if the instruction creates a label, add the label to the map of labels
 3. Execute the token vector
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrivernis%2Fledstrip-vm.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrivernis%2Fledstrip-vm?ref=badge_large)
