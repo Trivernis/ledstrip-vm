@@ -1,4 +1,4 @@
-# LED Strip VM
+# LED Strip VM ![](https://img.shields.io/discord/729250668162056313)
 
 A virtual machine for controlling a wifi led strip.
 
