@@ -29,7 +29,7 @@ pub enum ProgramStripCommand {
 
 #[derive(Debug)]
 pub struct LedStripController {
-    stream: TcpStream,
+    stream: Option<TcpStream>,
     pub r: u8,
     pub g: u8,
     pub b: u8,
@@ -37,7 +37,12 @@ pub struct LedStripController {
 
 impl LedStripController {
     pub fn new(ip: &str, port: usize) -> io::Result<Self> {
-        let stream = TcpStream::connect(format!("{}:{}", ip, port))?;
+        let stream = if let Ok(tcp_stream) = TcpStream::connect(format!("{}:{}", ip, port)) {
+            Some(tcp_stream)
+        } else {
+            eprintln!("Failed to connect. Writing sent data to stdout.");
+            None
+        };
 
         Ok(Self {
             stream,
@@ -47,29 +52,37 @@ impl LedStripController {
         })
     }
 
+    fn send(&mut self, message: &[u8]) -> io::Result<()> {
+        if let Some(stream) = &mut self.stream {
+            stream.write(message)?;
+            Ok(())
+        } else {
+            println!("Send: {:?}", message);
+            Ok(())
+        }
+    }
+
     /// Send an rgb color to the led strip
     pub fn send_rgb_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
         self.r = r;
         self.g = g;
         self.b = b;
         let message = create_message(&[0x31, r, g, b, 0xf0]);
-        self.stream.write(&message)?;
+        self.send(&message)?;
 
         Ok(())
     }
 
     /// Sets the state of the strip to either on or off
     pub fn set_state(&mut self, cmd: StateStripCommand) -> io::Result<()> {
-        self.stream
-            .write(&create_message(&[STATE_COMMAND_PREFIX, cmd as u8]))?;
+        self.send(&create_message(&[STATE_COMMAND_PREFIX, cmd as u8]))?;
 
         Ok(())
     }
     /// Sends a strip command with a specified speed
     /// that is one of 0x01 0x06, 0x10, 0x1c
     pub fn send_command(&mut self, cmd: ProgramStripCommand, speed: u8) -> io::Result<()> {
-        self.stream
-            .write(&create_message(&[PROGRAM_COMMAND_PREFIX, cmd as u8, speed]))?;
+        self.send(&create_message(&[PROGRAM_COMMAND_PREFIX, cmd as u8, speed]))?;
 
         Ok(())
     }
